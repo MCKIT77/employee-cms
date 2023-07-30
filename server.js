@@ -178,38 +178,68 @@ function updateData(choice) {
 }
 
 function updateEmployeeRole() {
-    inquirer
-        .prompt([
-            {
-                type: 'number',
-                name: 'employeeId',
-                message: "Enter the ID of the employee whose role you want to update:",
-            },
-            {
-                type: 'number',
-                name: 'newRoleId',
-                message: "Enter the ID of the new role for the employee:",
-            },
-        ])
-        .then((answers) => {
-            const employeeId = answers.employeeId;
-            const newRoleId = answers.newRoleId;
+    // Fetch all employees and their roles from the database
+    const employeeRoleQuery = `
+      SELECT employee.id AS employee_id, 
+             CONCAT(employee.first_name, ' ', employee.last_name) AS employee_name, 
+             role.id AS role_id,
+             role.title AS role_title
+      FROM employee
+      INNER JOIN role ON employee.role_id = role.id
+    `;
 
-            // Perform the database update for the employee's role
-            const query = 'UPDATE employee SET role_id = ? WHERE id = ?';
-            db.query(query, [newRoleId, employeeId], (err, result) => {
-                if (err) {
-                    console.error('Error updating employee role:', err);
-                } else {
-                    console.log(`Successfully updated employee's role with ID ${employeeId}`);
-                }
-                mainMenu(); // Continue with the prompt
+    db.query(employeeRoleQuery, (err, results) => {
+        if (err) {
+            console.error('Error fetching employee roles:', err);
+            mainMenu();
+            return;
+        }
+
+        const employeeChoices = results.map((employee) => ({
+            name: `${employee.employee_name} - ${employee.role_title}`,
+            value: employee.employee_id,
+        }));
+
+        const roleChoices = results.map((role) => ({
+            name: role.role_title,
+            value: role.role_id,
+        }));
+
+        inquirer
+            .prompt([
+                {
+                    type: 'list',
+                    name: 'employeeId',
+                    message: 'Select the employee whose role you want to update:',
+                    choices: employeeChoices,
+                },
+                {
+                    type: 'list',
+                    name: 'newRoleId',
+                    message: 'Select the new role for the employee:',
+                    choices: roleChoices,
+                },
+            ])
+            .then((answers) => {
+                const employeeId = answers.employeeId;
+                const newRoleId = answers.newRoleId;
+
+                // Perform the database update for the employee's role
+                const query = 'UPDATE employee SET role_id = ? WHERE id = ?';
+                db.query(query, [newRoleId, employeeId], (err, result) => {
+                    if (err) {
+                        console.error('Error updating employee role:', err);
+                    } else {
+                        console.log(`Successfully updated employee's role with ID ${employeeId}`);
+                    }
+                    mainMenu(); // Continue with the prompt
+                });
+            })
+            .catch((error) => {
+                console.error('Error occurred:', error);
+                process.exit(1); // Exit with an error code
             });
-        })
-        .catch((error) => {
-            console.error('Error occurred:', error);
-            process.exit(1); // Exit with an error code
-        });
+    });
 }
 
 
