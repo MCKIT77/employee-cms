@@ -29,7 +29,11 @@ Jacob McKitrick
 
 N/A
 
+## Demo Video
 
+link to video: https://drive.google.com/file/d/198IGxR8uCGHDbA32aDZHwPJyiKpXocA-/view
+
+github repo : https://github.com/MCKIT77/employee-cms
 
 ## Questions
 For any questions or inquiries, please contact me via GitHub or email:
